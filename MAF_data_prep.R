@@ -15,21 +15,24 @@ if(! file.exists(chain_file)) {
 #HCC-CLCA
 # somatic variant MAF data loading (WGS)
 clca_maf_file <- fread("./hcc_clca_2024/data_mutations.txt", sep = "\t", quote = "")
-clca_maf <- preload_maf(maf = clca_maf_file, chain_file = chain_file, 
-                        refset = "ces.refset.hg38", keep_extra_columns = "Variant_Classification")
+clca_maf <- preload_maf(maf = clca_maf_file, chain_file = chain_file,
+                        refset = "ces.refset.hg38", 
+                        keep_extra_columns = TRUE)
 # leave only somatic mutations
 # and remove all repetitive regions calls but those at COSMIC-annotated sites 
 # (where variants are assigned into tiers 1-3).
-clca_maf = clca_maf[germline_variant_site == F][repetitive_region == F | cosmic_site_tier %in% 1:3]
 clca_maf = clca_maf[is.na(problem)]
+clca_maf = clca_maf[germline_variant_site == F][repetitive_region == F | cosmic_site_tier %in% 1:3]
+
 
 
 #LIHC-TCGA
 # somatic variant MAF data loading (WXS)
 tcga_maf_file <- fread("./lihc_tcga/data_mutations.txt", sep = "\t", quote = "")
-tcga_maf = preload_maf(maf = tcga_maf_file, chain_file = chain_file, 
+tcga_maf <- preload_maf(maf = tcga_maf_file, chain_file = chain_file, 
                        coverage_intervals_to_check = ces.refset.hg38$default_exome,
-                       refset = "ces.refset.hg38", keep_extra_columns = "Variant_Classification")
+                       refset = "ces.refset.hg38", 
+                       keep_extra_columns = TRUE)
 #remove problematic
 tcga_maf = tcga_maf[is.na(problem)]
 #we'll remove records >100 bp out-of-coverage.
