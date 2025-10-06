@@ -93,20 +93,16 @@ significant_variants <- unique(
 )
 heatmap_data <- TCGA_gene_epi[variant_A %in% significant_variants & 
                                 variant_B %in% significant_variants]
-
-p5 = ggplot(heatmap_data_upper, aes(x = variant_A, y = variant_B, fill = p_epistasis)) +
+# heatmap for tcga significant epistasis
+p5 = ggplot(heatmap_data, aes(x = variant_A, y = variant_B, fill = p_epistasis)) +
   geom_tile(color = "grey85") +
-  # Use scale_fill_viridis_c() for a continuous viridis color scale
   scale_fill_viridis_c(
     name = "p-epistasis", 
-    option = "D", # Option "D" is the default viridis palette
+    option = "D", 
     limits = c(0, 0.05),
-    oob = scales::squish, # Handles values outside the limits gracefully
-    na.value = "grey50" # Color for any missing p-values on the diagonal
+    oob = scales::squish, 
+    na.value = "grey50"
   ) +
-  # Ensure the axes include all variants to maintain the square shape
-  scale_x_discrete(limits = all_vars, drop = FALSE) +
-  scale_y_discrete(limits = all_vars, drop = FALSE) +
   theme_minimal() +
   labs(
     x = "Gene A",
