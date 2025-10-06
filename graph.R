@@ -34,7 +34,7 @@ p1 = plot_effects(
   effects   = CLCA_keep,
   topn      = NULL,
   group_by = "gene",  # group by gene
-  label_individual_variants = T,
+  label_individual_variants = F,
   order_by_effect = T,
   prevalence_method = "both",
   color_by = "variant_type"
@@ -85,7 +85,6 @@ p4 = p4[[1]]+
     axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.5, face = "italic")
   )
 p4
-
 
 TCGA_gene_epi = tcga_cesa$epistasis$TCGA_gene_epi
 significant_variants <- unique(

@@ -34,7 +34,7 @@ p1 = plot_effects(
   effects   = CLCA_keep,
   topn      = NULL,
   group_by = "gene",  # group by gene
-  label_individual_variants = T,
+  label_individual_variants = F,
   order_by_effect = T,
   prevalence_method = "both",
   color_by = "variant_type"
@@ -86,27 +86,22 @@ p4 = p4[[1]]+
   )
 p4
 
-
 TCGA_gene_epi = tcga_cesa$epistasis$TCGA_gene_epi
 significant_variants <- unique(
   unlist(TCGA_gene_epi[p_epistasis <= 0.05, .(variant_A, variant_B)])
 )
 heatmap_data <- TCGA_gene_epi[variant_A %in% significant_variants & 
                                 variant_B %in% significant_variants]
-
-p5 = ggplot(heatmap_data_upper, aes(x = variant_A, y = variant_B, fill = p_epistasis)) +
+# heatmap for tcga significant epistasis
+p5 = ggplot(heatmap_data, aes(x = variant_A, y = variant_B, fill = p_epistasis)) +
   geom_tile(color = "grey85") +
-  # Use scale_fill_viridis_c() for a continuous viridis color scale
   scale_fill_viridis_c(
     name = "p-epistasis", 
-    option = "D", # Option "D" is the default viridis palette
+    option = "D", 
     limits = c(0, 0.05),
-    oob = scales::squish, # Handles values outside the limits gracefully
-    na.value = "grey50" # Color for any missing p-values on the diagonal
+    oob = scales::squish, 
+    na.value = "grey50"
   ) +
-  # Ensure the axes include all variants to maintain the square shape
-  scale_x_discrete(limits = all_vars, drop = FALSE) +
-  scale_y_discrete(limits = all_vars, drop = FALSE) +
   theme_minimal() +
   labs(
     x = "Gene A",
