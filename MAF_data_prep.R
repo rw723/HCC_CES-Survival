@@ -24,8 +24,6 @@ clca_maf <- preload_maf(maf = clca_maf_file, chain_file = chain_file,
 clca_maf = clca_maf[is.na(problem)]
 clca_maf = clca_maf[germline_variant_site == F][repetitive_region == F | cosmic_site_tier %in% 1:3]
 
-
-
 #LIHC-TCGA
 # somatic variant MAF data loading (WXS)
 tcga_maf_file <- fread("./lihc_tcga/data_mutations.txt", sep = "\t", quote = "")
