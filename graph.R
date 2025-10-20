@@ -4,6 +4,7 @@ library(data.table)
 library(ggplot2)
 library(ggtext)
 library(scales)
+library(tidyverse)
 
 # Load the CESAnalysis objects
 clca_maf <- preload_maf(maf = "./hcc_clca_hg38.maf", refset = "ces.refset.hg38", 
@@ -78,11 +79,54 @@ p3
 #Epistasis
 CLCA_gene_epi = clca_cesa$epistasis$CLCA_gene_epi
 CLCA_significant_epi <- CLCA_gene_epi[p_epistasis <= 0.05]
-p4 = plot_epistasis(epistatic_effects = CLCA_significant_epi)
+# Reshape and label the data
+CLCA_significant_epi[, `:=`(
+  A_change_dir = ifelse(ces_A_on_B >= ces_A0, "rising", "lowering"),
+  B_change_dir = ifelse(ces_B_on_A >= ces_B0, "rising", "lowering")
+)]
 
-p4 = p4[[1]]+
+plot_data_A <- CLCA_significant_epi[, .(pair_id = .I, gene = variant_A, change_dir = A_change_dir, 
+                                        selection_independent = ces_A0, selection_epistatic = ces_A_on_B)]
+plot_data_B <- CLCA_significant_epi[, .(pair_id = .I, gene = variant_B, change_dir = B_change_dir,
+                                        selection_independent = ces_B0, selection_epistatic = ces_B_on_A)]
+plot_data <- rbind(plot_data_A, plot_data_B)
+
+p4 <- ggplot(plot_data) +
+  geom_segment(
+    aes(x = 0.5, xend = 2.5, y = selection_independent, yend = selection_epistatic, color = change_dir),
+    linewidth = 1.2,
+    arrow = arrow(length = unit(0.3, "cm"), ends = "last", type = "closed")
+  ) +
+  geom_point(aes(x = 0.5, y = selection_independent, color = change_dir), size = 4) +
+  geom_text_repel(aes(x = 2, y = selection_epistatic, label = gene), 
+                  data = . %>% filter(gene != "ENSG00000291313"),
+                  color = "black", nudge_x = 0.7, direction = "y", hjust = 0,
+                  size = 4, fontface = "italic", segment.color = NA) +
+  geom_text_repel(aes(x = 2, y = selection_epistatic, label = gene), 
+                  data = . %>% filter(gene == "ENSG00000291313"),
+                  color = "black", nudge_x = 0.7, nudge_y = 0.5,
+                  direction = "y", hjust = 0, size = 4, fontface = "italic", 
+                  segment.color = NA) + 
+  facet_wrap(~pair_id, ncol = 3, scales = "free_x") +
+  scale_y_log10(labels = scales::label_scientific(digits = 2), n.breaks = 8) +
+  scale_color_manual(values = c("rising" = "#e41a1c", "lowering" = "#377eb8")) +
+  
+  scale_x_continuous(
+    name = "Condition",
+    breaks = c(0.5, 2.5),
+    labels = c("Independent", "Epistatic"),
+    limits = c(0, 4) # Provides space for labels
+  ) +
+  labs(
+    y = "Estimated Selection Coefficient (log scale)"
+  ) +
+  theme_bw(base_size = 14) +
   theme(
-    axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.5, face = "italic")
+    legend.position = "none",
+    strip.text = element_blank(),
+    strip.background = element_blank(),
+    axis.text.x = element_text(size = 11),
+    panel.spacing = unit(1.5, "lines"),
   )
 p4
 
@@ -120,5 +164,5 @@ p5
 ggsave(plot = p1, filename = 'Fig2_clca_all.png', width = 550 * 3, height = 800*2.5, units = 'px', dpi = 'retina')
 ggsave(plot = p2, filename = 'Fig3_clca_aac.png', width = 500 * 3, height = 700*2, units = 'px', dpi = 'retina')
 ggsave(plot = p3, filename = 'Fig3_tcga_aac.png', width = 500 * 3, height = 700*2, units = 'px', dpi = 'retina')
-ggsave(plot = p4, filename = 'Fig4_clca_aac_epistasis.png', width = 800 * 3, height = 700*2, units = 'px', dpi = 'retina')
+ggsave(plot = p4, filename = 'Fig4_clca_aac_epistasis.png', width = 800 * 3, height = 800*3, units = 'px', dpi = 'retina')
 ggsave(plot = p5, filename = 'Fig4_tcga_aac_epistasis.png', width = 700 * 3, height = 700*3, units = 'px', dpi = 'retina')
