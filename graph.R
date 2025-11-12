@@ -105,7 +105,7 @@ p4 <- ggplot(plot_data) +
   geom_text_repel(aes(x = 2, y = selection_epistatic, label = gene), 
                   data = . %>% filter(gene == "ENSG00000291313"),
                   color = "black", nudge_x = 0.7, nudge_y = 0.5,
-                  direction = "y", hjust = 0, size = 4, fontface = "italic", 
+                  direction = "y", hjust = 0, size = 4, 
                   segment.color = NA) + 
   facet_wrap(~pair_id, ncol = 3, scales = "free_x") +
   scale_y_log10(labels = scales::label_scientific(digits = 2), n.breaks = 8) +
@@ -118,7 +118,7 @@ p4 <- ggplot(plot_data) +
     limits = c(0, 4) # Provides space for labels
   ) +
   labs(
-    y = "Estimated Selection Coefficient (log scale)"
+    y = "Estimated selection coefficient (log scale)"
   ) +
   theme_bw(base_size = 14) +
   theme(
