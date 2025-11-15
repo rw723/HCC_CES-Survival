@@ -351,8 +351,8 @@ p6 <- ggsurvplot(
 
 # -------- Arrange as 3 rows × 2 columns (OS | DFS) --------
 fig_3x2 <- (p1 | p2) /
-  (p3 | p4) /
-  (p5 | p6)
+           (p3 | p4) /
+           (p5 | p6)
 
 fig_3x2 <- fig_3x2 + plot_annotation(tag_levels = "A") &
   theme(plot.tag = element_text(size = 16, face = "plain"))
@@ -746,8 +746,8 @@ p6 <- g6$plot +
 
 # ---------- Arrange as 3 rows × 2 columns (OS | DFS) with tags A–F ----------
 fig_3x2 <- (p1 | p2) /
-  (p3 | p4) /
-  (p5 | p6)
+           (p3 | p4) /
+           (p5 | p6)
 
 fig_3x2 <- fig_3x2 +
   plot_annotation(tag_levels = "A") &
