@@ -476,7 +476,7 @@ fig5 <- g_os$plot + g_dfs$plot +
     text = element_text(family = "Arial", size = base_font),
     plot.tag = element_text(family = "Arial", face = "bold", size = 18),
     # top pixel & left pixel alignment (approximate)
-    plot.tag.position = c(0, 1)
+    plot.tag.position = c(0, 0.982)
   )
 
 # show
@@ -755,7 +755,7 @@ fig_3x2 <- fig_3x2 +
     text = element_text(family = "Arial", size = base_font),
     plot.tag = element_text(family = "Arial", face = "bold", size = 18),
     # A–F at top-left, aligned with top of image, shifted slightly left
-    plot.tag.position = c(0, 1)
+    plot.tag.position = c(0, 0.982)
   )
 
 # show
