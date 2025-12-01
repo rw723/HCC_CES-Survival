@@ -140,7 +140,7 @@ heatmap_data <- TCGA_gene_epi[variant_A %in% significant_variants &
 p5 = ggplot(heatmap_data, aes(x = variant_A, y = variant_B, fill = p_epistasis)) +
   geom_tile(color = "grey85") +
   scale_fill_viridis_c(
-    name = "P_value for epistasis", 
+    name = "P value for epistasis", 
     option = "D", 
     limits = c(0, 0.05),
     oob = scales::squish, 
