@@ -5,11 +5,16 @@ library(data.table)
 
 # Load the data
 # Get file for liftOver
-chain_file = 'hg19ToHg38.over.chain'
-if(! file.exists(chain_file)) {
-  download.file(url = 'https://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz',
-                destfile = 'hg19ToHg38.over.chain.gz' )
-  writeLines(readLines('hg19ToHg38.over.chain.gz'), chain_file)
+chain_gz <- "hg19ToHg38.over.chain.gz"
+chain_file <- "hg19ToHg38.over.chain"
+
+if (!file.exists(chain_file)) {
+  download.file(
+    url = "https://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz",
+    destfile = chain_gz,
+    mode = "wb"
+  )
+  R.utils::gunzip(chain_gz, destname = chain_file, remove = FALSE, overwrite = TRUE)
 }
 
 #HCC-CLCA
@@ -27,7 +32,7 @@ clca_maf = clca_maf[germline_variant_site == F][repetitive_region == F | cosmic_
 #LIHC-TCGA
 # somatic variant MAF data loading (WXS)
 tcga_maf_file <- fread("./lihc_tcga/data_mutations.txt", sep = "\t", quote = "")
-tcga_maf <- preload_maf(maf = tcga_maf_file, chain_file = chain_file, 
+tcga_maf <- preload_maf(maf = tcga_maf_file,  
                        coverage_intervals_to_check = ces.refset.hg38$default_exome,
                        refset = "ces.refset.hg38", 
                        keep_extra_columns = TRUE)
