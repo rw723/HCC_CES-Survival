@@ -76,46 +76,104 @@ p3 = plot_effects(
 ) + scale_x_log10() + theme(axis.text.y = element_text(face = "italic"))
 p3
 
-#Epistasis
-CLCA_gene_epi = clca_cesa$epistasis$CLCA_gene_epi
+# Epistasis
+CLCA_gene_epi <- clca_cesa$epistasis$CLCA_gene_epi
+CLCA_gene_epi[, p_epistasis_adj := p.adjust(p_epistasis, method = "BH")]
+
 CLCA_significant_epi <- CLCA_gene_epi[p_epistasis <= 0.05]
-# Reshape and label the data
+
 CLCA_significant_epi[, `:=`(
+  pair_id = .I,
   A_change_dir = ifelse(ces_A_on_B >= ces_A0, "rising", "lowering"),
-  B_change_dir = ifelse(ces_B_on_A >= ces_B0, "rising", "lowering")
+  B_change_dir = ifelse(ces_B_on_A >= ces_B0, "rising", "lowering"),
+  p_label = paste0(
+    "Nominal P = ", scales::pvalue(p_epistasis, accuracy = 0.001),
+    "\nBH-adjusted P = ", scales::pvalue(p_epistasis_adj, accuracy = 0.001)
+  )
 )]
 
-plot_data_A <- CLCA_significant_epi[, .(pair_id = .I, gene = variant_A, change_dir = A_change_dir, 
-                                        selection_independent = ces_A0, selection_epistatic = ces_A_on_B)]
-plot_data_B <- CLCA_significant_epi[, .(pair_id = .I, gene = variant_B, change_dir = B_change_dir,
-                                        selection_independent = ces_B0, selection_epistatic = ces_B_on_A)]
+plot_data_A <- CLCA_significant_epi[, .(
+  pair_id,
+  p_label,
+  gene = variant_A,
+  change_dir = A_change_dir,
+  selection_independent = ces_A0,
+  selection_epistatic = ces_A_on_B,
+  p_epistasis,
+  p_epistasis_adj
+)]
+
+plot_data_B <- CLCA_significant_epi[, .(
+  pair_id,
+  p_label,
+  gene = variant_B,
+  change_dir = B_change_dir,
+  selection_independent = ces_B0,
+  selection_epistatic = ces_B_on_A,
+  p_epistasis,
+  p_epistasis_adj
+)]
+
 plot_data <- rbind(plot_data_A, plot_data_B)
+
+# Offset arrows within each panel to avoid overlap
+plot_data[, gene_order := seq_len(.N), by = pair_id]
+plot_data[, x_offset := ifelse(gene_order == 1, -0.08, 0.08), by = pair_id]
+plot_data[, x_ind := 0.5 + x_offset]
+plot_data[, x_epi := 2.5 + x_offset]
+plot_data[, x_lab := 2.0 + x_offset]
 
 p4 <- ggplot(plot_data) +
   geom_segment(
-    aes(x = 0.5, xend = 2.5, y = selection_independent, yend = selection_epistatic, color = change_dir),
+    aes(
+      x = x_ind,
+      xend = x_epi,
+      y = selection_independent,
+      yend = selection_epistatic,
+      color = change_dir
+    ),
     linewidth = 1.2,
     arrow = arrow(length = unit(0.3, "cm"), ends = "last", type = "closed")
   ) +
-  geom_point(aes(x = 0.5, y = selection_independent, color = change_dir), size = 4) +
-  geom_text_repel(aes(x = 2, y = selection_epistatic, label = gene), 
-                  data = . %>% filter(gene != "ENSG00000291313"),
-                  color = "black", nudge_x = 0.7, direction = "y", hjust = 0,
-                  size = 4, fontface = "italic", segment.color = NA) +
-  geom_text_repel(aes(x = 2, y = selection_epistatic, label = gene), 
-                  data = . %>% filter(gene == "ENSG00000291313"),
-                  color = "black", nudge_x = 0.7, nudge_y = 0.5,
-                  direction = "y", hjust = 0, size = 4, 
-                  segment.color = NA) + 
-  facet_wrap(~pair_id, ncol = 3, scales = "free_x") +
-  scale_y_log10(labels = scales::label_scientific(digits = 2), n.breaks = 8) +
-  scale_color_manual(values = c("rising" = "#e41a1c", "lowering" = "#377eb8")) +
-  
+  geom_point(
+    aes(x = x_ind, y = selection_independent, color = change_dir),
+    size = 4
+  ) +
+  geom_text_repel(
+    aes(x = x_lab, y = selection_epistatic, label = gene),
+    data = . %>% filter(gene != "ENSG00000291313"),
+    color = "black",
+    nudge_x = 0.7,
+    direction = "y",
+    hjust = 0,
+    size = 4,
+    fontface = "italic",
+    segment.color = NA
+  ) +
+  geom_text_repel(
+    aes(x = x_lab, y = selection_epistatic, label = gene),
+    data = . %>% filter(gene == "ENSG00000291313"),
+    color = "black",
+    nudge_x = 0.7,
+    nudge_y = 0.5,
+    direction = "y",
+    hjust = 0,
+    size = 4,
+    segment.color = NA
+  ) +
+  facet_wrap(~p_label, ncol = 3, scales = "free_x") +
+  scale_y_log10(
+    labels = scales::label_scientific(digits = 2),
+    n.breaks = 8
+  ) +
+  scale_color_manual(
+    values = c("rising" = "#e41a1c", "lowering" = "#377eb8")
+  ) +
   scale_x_continuous(
     name = "Condition",
     breaks = c(0.5, 2.5),
     labels = c("Independent", "Epistatic"),
-    limits = c(0, 4) # Provides space for labels
+    limits = c(0, 4)
   ) +
   labs(
     y = "Estimated selection coefficient (log scale)"
@@ -123,11 +181,12 @@ p4 <- ggplot(plot_data) +
   theme_bw(base_size = 14) +
   theme(
     legend.position = "none",
-    strip.text = element_blank(),
+    strip.text = element_text(size = 11, hjust = 0),
     strip.background = element_blank(),
     axis.text.x = element_text(size = 11),
-    panel.spacing = unit(1.5, "lines"),
+    panel.spacing = unit(1.5, "lines")
   )
+
 p4
 
 TCGA_gene_epi = tcga_cesa$epistasis$TCGA_gene_epi
