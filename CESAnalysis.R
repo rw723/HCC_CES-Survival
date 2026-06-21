@@ -71,3 +71,42 @@ tcga_cesa <- ces_gene_epistasis(
 save_cesa(clca_cesa, 'clca_cesa.rds')
 save_cesa(tcga_cesa, 'tcga_cesa.rds')
 
+# S1 variant-level CES
+# Fill missing gene IDs before CSV export
+CLCA_variant_CES <- as.data.table(copy(clca_cesa$selection$CLCA_variant_CES))
+CLCA_variant_CES[, variant_name := sub("\\s*\\(.*$", "", variant_name)]
+CLCA_variant_CES[, gene := fifelse(
+  is.na(gene) | gene == "",
+  clca_maf$Hugo_Symbol[match(variant_id, clca_maf$variant_id)],
+  gene
+)]
+CLCA_variant_CES[, cohort := "CLCA"]
+TCGA_variant_CES <- as.data.table(copy(tcga_cesa$selection$TCGA_variant_CES))
+TCGA_variant_CES[, variant_name := sub("\\s*\\(.*$", "", variant_name)]
+TCGA_variant_CES[, gene := fifelse(
+  is.na(gene) | gene == "",
+  tcga_maf$Hugo_Symbol[match(variant_id, tcga_maf$variant_id)],
+  gene
+)]
+TCGA_variant_CES[, cohort := "TCGA"]
+
+S1_variant_CES <- rbindlist(
+  list(CLCA_variant_CES, TCGA_variant_CES),
+  fill = TRUE
+)
+
+fwrite(S1_variant_CES, "S1_Data_variant_level_CES_results.csv")
+
+# S2 gene-level epistasis
+CLCA_gene_epi <- as.data.table(copy(clca_cesa$epistasis$CLCA_gene_epi))
+TCGA_gene_epi <- as.data.table(copy(tcga_cesa$epistasis$TCGA_gene_epi))
+
+CLCA_gene_epi[, cohort := "CLCA"]
+TCGA_gene_epi[, cohort := "TCGA"]
+
+S2_gene_epistasis <- rbindlist(
+  list(CLCA_gene_epi, TCGA_gene_epi),
+  fill = TRUE
+)
+
+fwrite(S2_gene_epistasis, "S2_Data_gene_level_epistasis_results.csv")
